@@ -1,6 +1,6 @@
 package com.tyaer.net.manager;
 
-import com.tyaer.net.bean.DTO;
+import com.tyaer.net.config.HttpConfig;
 import org.apache.http.*;
 import org.apache.http.client.HttpRequestRetryHandler;
 import org.apache.http.client.config.AuthSchemes;
@@ -46,6 +46,7 @@ import java.util.concurrent.TimeUnit;
  * Created by Twin on 2016/8/16.
  */
 public class HttpClientManager {
+
     private static final Logger logger = Logger.getLogger(HttpClientManager.class);
     /**
      * 下载失败后，马上进行重试的次数(通过使用httpclient自带的requestretryhandler机制)
@@ -83,13 +84,13 @@ public class HttpClientManager {
     private static ConnectionKeepAliveStrategy myStrategy;
     private static HttpRequestRetryHandler myRequestRetryHandler;
     private static RequestConfig defaultRequestConfig;
-    private static CloseableHttpClient CLOSEABLEHTTPCLIENT_INSTANCE;
+    private static volatile CloseableHttpClient CLOSEABLEHTTPCLIENT_INSTANCE;
 
     static {
-        MAX_TOTAL_CONNECTIONS = DTO.MAX_TOTAL_CONNECTIONS;
-        MAX_ROUTE_CONNECTIONS = DTO.MAX_ROUTE_CONNECTIONS;
-        CONNECTION_TIMEOUT = DTO.CONNECTION_TIMEOUT;
-        SOCKET_TIMEOUT = DTO.SOCKET_TIMEOUT;
+        MAX_TOTAL_CONNECTIONS = HttpConfig.MAX_TOTAL_CONNECTIONS;
+        MAX_ROUTE_CONNECTIONS = HttpConfig.MAX_ROUTE_CONNECTIONS;
+        CONNECTION_TIMEOUT = HttpConfig.CONNECTION_TIMEOUT;
+        SOCKET_TIMEOUT = HttpConfig.SOCKET_TIMEOUT;
 
         CONNECTION_REQUEST_TIMEOUT = 10000;
 
@@ -102,7 +103,7 @@ public class HttpClientManager {
         }
 
         // 连接回收策略,启动线程，5秒钟清空一次失效连接
-//        new IdleConnectionMonitorThread(connectionManager).start();//// TODO: 2016/12/8 线程
+//        new IdleConnectionMonitorThread(connectionManager).start();//// TODO: 2016/12/8 开启线程
 
         // 连接存活策略
         myStrategy = new MyDefaultConnectionKeepAliveStrategy();
@@ -113,7 +114,8 @@ public class HttpClientManager {
         //RequestConfig基本设置
         defaultRequestConfig = RequestConfig
                 .custom()
-                .setCookieSpec(CookieSpecs.STANDARD)//获取cookie时必须设置，光set可以设置为IGNORE_COOKIES
+                //获取cookie时必须设置STANDARD，光手动set可以设置为IGNORE_COOKIES
+                .setCookieSpec(CookieSpecs.IGNORE_COOKIES)
                 .setExpectContinueEnabled(true)//期望连接
 //                .setStaleConnectionCheckEnabled(true) //检查旧连接
                 .setTargetPreferredAuthSchemes(Arrays.asList(AuthSchemes.NTLM, AuthSchemes.DIGEST))
@@ -133,7 +135,8 @@ public class HttpClientManager {
     }
 
     /**
-     * request设置
+     * request设置，局部设置
+     * 还有后续设置，所以不能作为单例模式
      *
      * @return
      */
@@ -142,17 +145,18 @@ public class HttpClientManager {
                 .copy(defaultRequestConfig)
                 .setConnectTimeout(CONNECTION_TIMEOUT)
                 .setSocketTimeout(SOCKET_TIMEOUT)
-                .setCookieSpec(CookieSpecs.IGNORE_COOKIES)//去除关键词任务Warn TODO: 2016/11/26 忽略Cookie的政策。
+//                .setCookieSpec(CookieSpecs.IGNORE_COOKIES)//去除关键词任务Warn TODO: 2016/11/26 忽略Cookie的政策。
                 .setConnectionRequestTimeout(CONNECTION_REQUEST_TIMEOUT);
         return builder;
     }
 
     /**
      * 全局设置
+     * 设置在 CloseableHttpClient
      *
      * @return
      */
-    public static RequestConfig getDefaultRequestConfig() {
+    private static RequestConfig getDefaultRequestConfig() {
         RequestConfig requestConfig = RequestConfig
                 .copy(defaultRequestConfig)
                 .setConnectTimeout(CONNECTION_TIMEOUT)
@@ -164,18 +168,22 @@ public class HttpClientManager {
 
     public static CloseableHttpClient getHttpClient() {
         if (CLOSEABLEHTTPCLIENT_INSTANCE == null) {
-            CloseableHttpClient httpClient = HttpClients
-                    .custom()
-                    .setConnectionManager(connectionManager)
-//                  .setSSLSocketFactory(getSSLConnectionSocketFactory()) //认证https，若同时设置了connectionManager，该设置无效？
-                    .setDefaultRequestConfig(getDefaultRequestConfig())
-                    .setDefaultCookieStore(new BasicCookieStore())
-                    .setRedirectStrategy(new LaxRedirectStrategy())// 声明重定向策略对象
-//                    .disableRedirectHandling() //关闭重定向
-                    .setRetryHandler(myRequestRetryHandler) //重试请求.setRetryHandler(new DefaultHttpRequestRetryHandler(retryTimes, true)) //重试请求
-                    .setKeepAliveStrategy(myStrategy) //// TODO: 2016/8/16  需要测试
-                    .build();//刷新配置
-            CLOSEABLEHTTPCLIENT_INSTANCE = httpClient;
+            synchronized (HttpClientManager.class) {
+                if (CLOSEABLEHTTPCLIENT_INSTANCE == null) {
+                    CloseableHttpClient httpClient = HttpClients
+                            .custom()
+                            .setConnectionManager(connectionManager)
+//                          .setSSLSocketFactory(getSSLConnectionSocketFactory()) //认证https，若同时设置了connectionManager，该设置无效？
+                            .setDefaultRequestConfig(getDefaultRequestConfig())
+                            .setDefaultCookieStore(new BasicCookieStore())
+                            .setRedirectStrategy(new LaxRedirectStrategy())// 声明重定向策略对象
+//                          .disableRedirectHandling() //关闭重定向
+                            .setRetryHandler(myRequestRetryHandler) //重试请求.setRetryHandler(new DefaultHttpRequestRetryHandler(retryTimes, true))
+                            .setKeepAliveStrategy(myStrategy) //// TODO: 2016/8/16  需要测试
+                            .build();//刷新配置
+                    CLOSEABLEHTTPCLIENT_INSTANCE = httpClient;
+                }
+            }
         }
         return CLOSEABLEHTTPCLIENT_INSTANCE;
     }

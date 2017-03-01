@@ -42,7 +42,6 @@ public class BaiduLogin {
 
     public static String getBaiduCookie(String username, String password) throws Exception {
 
-        StringBuilder sb = new StringBuilder();
         HtmlUnitDriver driver = new HtmlUnitDriver(true);
         // driver.setSocksProxy("127.0.0.1", 1080);
         // driver.setProxy("127.0.0.1", 1080);

@@ -3,6 +3,10 @@ package com.tyaer.net.utils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.junit.Test;
 
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -14,6 +18,33 @@ public class UrlUtils {
 //        String url="http://weixin.sogou.com/weixin?query=%E6%91%A9%E6%8B%9C&_sug_type_=&_sug_=n&type=2&page=2&ie=utf8";
         String url="http://weixin.sogou.com/weixinwap?page=1&_rtype=json&ie=utf8&type=2&t=1483061392733&query=%E6%91%A9%E6%8B%9C&pg=webSearchList&_sug_=y&_sug_type_=&tsn=1&";
         analyzeParameters(url);
+    }
+
+    /**
+     * 不好用，有问题
+     *
+     * @param urlString
+     * @return
+     */
+    public static URI transformURI(String urlString) {
+        if (null == urlString || urlString.isEmpty()) {
+            return null;
+        }
+        //防止传入的urlString首尾有空格
+        urlString = urlString.trim();
+        //转化String url为URI,解决url中包含特殊字符的情况
+        URI uri = null;
+        try {
+            URL url = new URL(urlString);
+            //这里如果会强制将urlString转换为UTF-8格式，如百度贴吧的链接key为gb2312则不能使用此方法转换。
+            uri = new URI(url.getProtocol(), url.getHost(), url.getPath(), url.getQuery(), null);
+//            url=new URI()
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        } catch (URISyntaxException e) {
+            e.printStackTrace();
+        }
+        return uri;
     }
 
     /**

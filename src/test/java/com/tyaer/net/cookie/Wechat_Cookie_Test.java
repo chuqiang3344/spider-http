@@ -1,4 +1,4 @@
-package wx;
+package com.tyaer.net.cookie;
 
 import com.tyaer.net.utils.HttpUtils;
 import org.junit.Test;
@@ -6,7 +6,7 @@ import org.junit.Test;
 /**
  * Created by Twin on 2017/1/10.
  */
-public class Cookie_Test {
+public class Wechat_Cookie_Test {
 
     @Test
     public void getWebCookie_Test(){

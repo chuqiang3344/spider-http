@@ -140,16 +140,17 @@ public class WebClientUtils {
 		WebClientUtils util = new WebClientUtils();
 //		String str_url = "http://www.cnblogs.com/Gaojiecai/p/3415146.html";
 //		String str_url = "http://mp.weixin.qq.com/profile?src=3&timestamp=1479881197&ver=1&signature=mFCwcLO9hTwe*Js7TGQ457olpvr1d85gJSnVLyFgtYloE8sxxQCrV7BsbGbRDYkDEgHzd1pXjj-qh4UblC-Hug==";
-		String str_url = "http://data.stats.gov.cn/easyquery.htm?cn=E0104";
+//		String str_url = "http://data.stats.gov.cn/easyquery.htm?cn=E0104";
+		String str_url = "http://m.weibo.cn/u/2640113513";
 		String html = util.getHtml(str_url);
 		System.out.println(html);
 
         /*String str_url = "http://www.yxtv.cn/portal.php?mod=list&catid=1";
-		String cookie = util.getCookie("http://www.yxtv.cn/");
-		System.out.println(cookie);
+		String com.tyaer.net.cookie = util.getCookie("http://www.yxtv.cn/");
+		System.out.println(com.tyaer.net.cookie);
 //		util.showBaseInfo(str_url);
 		Thread.sleep(3000);
 		HttpHelper httpHelper = new HttpHelper();
-		System.out.println(httpHelper.sendRequest(str_url,cookie));*/
+		System.out.println(httpHelper.sendRequest(str_url,com.tyaer.net.cookie));*/
 	}
 }

@@ -1,4 +1,4 @@
-package useragent;
+package com.tyaer.net.useragent;
 
 
 import com.alibaba.fastjson.JSONObject;

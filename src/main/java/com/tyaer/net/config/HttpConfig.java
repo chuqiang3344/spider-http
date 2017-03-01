@@ -1,14 +1,13 @@
-package com.tyaer.net.bean;
+package com.tyaer.net.config;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.Properties;
 
 /**
- * Created by Twin on 2016/12/8.
+ * Created by Twin on 2017/3/1.
  */
-public class DTO {
+public class HttpConfig {
 
     public static int MAX_TOTAL_CONNECTIONS = 100;
     public static int MAX_ROUTE_CONNECTIONS = 100;
@@ -18,13 +17,13 @@ public class DTO {
     static {
         //加载log4j的配置文件
         Properties properties = new Properties();
-        InputStream in = null;
+        BufferedInputStream in = null;
         try {
-            in = new BufferedInputStream(DTO.class.getClassLoader().getResourceAsStream("http.properties"));
+            in = new BufferedInputStream(HttpConfig.class.getResourceAsStream("/http.properties"));
             properties.load(in);
             MAX_TOTAL_CONNECTIONS = Integer.parseInt(properties.getProperty("MAX_TOTAL_CONNECTIONS"));
             MAX_ROUTE_CONNECTIONS = Integer.parseInt(properties.getProperty("MAX_ROUTE_CONNECTIONS"));
-            CONNECTION_TIMEOUT =Integer.parseInt(properties.getProperty("CONNECTION_TIMEOUT"));
+            CONNECTION_TIMEOUT = Integer.parseInt(properties.getProperty("CONNECTION_TIMEOUT"));
             SOCKET_TIMEOUT = Integer.parseInt(properties.getProperty("SOCKET_TIMEOUT"));
         } catch (Exception e) {
             e.printStackTrace();

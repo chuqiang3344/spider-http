@@ -1,4 +1,4 @@
-package cookie;
+package com.tyaer.net.cookie;
 
 import com.tyaer.net.utils.CookieUtils;
 import org.junit.Test;

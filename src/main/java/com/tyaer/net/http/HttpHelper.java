@@ -1,7 +1,7 @@
 package com.tyaer.net.http;
 
 //import com.google.common.base.Joiner;
-import com.tyaer.net.bean.HttpMethodType;
+
 import com.tyaer.net.bean.RequestBean;
 import com.tyaer.net.bean.ResponseBean;
 import com.tyaer.net.manager.HttpClientManager;
@@ -11,22 +11,15 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
 import org.apache.http.NameValuePair;
-import org.apache.http.auth.AUTH;
-import org.apache.http.auth.AuthScope;
-import org.apache.http.auth.MalformedChallengeException;
-import org.apache.http.auth.UsernamePasswordCredentials;
-import org.apache.http.client.AuthCache;
 import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
-import org.apache.http.client.methods.*;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.client.protocol.HttpClientContext;
-import org.apache.http.impl.auth.BasicScheme;
-import org.apache.http.impl.client.BasicAuthCache;
-import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.message.BasicHeader;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.ByteArrayBuffer;
@@ -39,9 +32,10 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.*;
 
 /**
@@ -92,11 +86,12 @@ public class HttpHelper {
             page.getRequest().setHttpHost(config.getProxy());
         }
         CloseableHttpClient httpClient;
-        if (url.startsWith("https")) {
-            httpClient = HttpClientManager.createSSLClientDefault();
-        } else {
-            httpClient = HttpClientManager.getHttpClient();
-        }
+//        if (url.startsWith("https")) {
+//            httpClient = HttpClientManager.createSSLClientDefault();
+//        } else {
+//            httpClient = HttpClientManager.getHttpClient();
+//        }
+        httpClient = HttpClientManager.getHttpClient();
         /**设置请求头*/
         setHttpRequestHeader(request, page);
         HttpEntity entity = null;
@@ -408,42 +403,6 @@ public class HttpHelper {
         return page;
     }
 
-    private String getAuthHeader() {
-        // 定义申请获得的appKey和appSecret
-        String appkey = "82789299";
-        String secret = "3d0279cdbe3ef60f90f40d07c985535d";
-
-        // 创建参数表
-        Map<String, String> paramMap = new HashMap<String, String>();
-        paramMap.put("app_key", appkey);
-        DateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        format.setTimeZone(TimeZone.getTimeZone("GMT+8"));//使用中国时间，以免时区不同导致认证错误
-        paramMap.put("timestamp", format.format(new Date()));
-
-        // 对参数名进行排序
-        String[] keyArray = paramMap.keySet().toArray(new String[0]);
-        Arrays.sort(keyArray);
-
-        // 拼接有序的参数名-值串
-        StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append(secret);
-        for (String key : keyArray) {
-            stringBuilder.append(key).append(paramMap.get(key));
-        }
-
-        stringBuilder.append(secret);
-        String codes = stringBuilder.toString();
-
-        // MD5编码并转为大写， 这里使用的是Apache codec
-        String sign = org.apache.commons.codec.digest.DigestUtils.md5Hex(codes).toUpperCase();
-
-        paramMap.put("sign", sign);
-
-        // 拼装请求头Proxy-Authorization的值，这里使用 guava 进行map的拼接
-//        String authHeader = "MYH-AUTH-MD5 " + Joiner.on('&').withKeyValueSeparator("=").join(paramMap);
-        String authHeader = "";
-        return authHeader;
-    }
 
     /**
      * 模拟发出Http请求
@@ -457,176 +416,68 @@ public class HttpHelper {
      */
     public ResponseBean sendRequest(String url, String type, Map<String, String> params) {
         ResponseBean page = null;
-        String html = "";
         // GET方式请求
-//        if(type.equals(HttpMethodType.PUT))
         if (HttpHelper.REQUEST_TYPE_GET.equals(type)) {
-            // 加入请求参数
-            if (params != null) {
-                if (url.indexOf("?") != -1) {
-                    url += "&";
-                } else {
-                    url += "?";
-                }
-                for (String key : params.keySet()) {
-                    url += key + "=" + params.get(key) + "&";
-                }
-            }
-            HttpGet httpGet = new HttpGet(url);
-            // 模拟浏览器
-            page = sendRequstGetPage(httpGet);
+            page = sendGetRequest(url, params);
         } else if (HttpHelper.REQUEST_TYPE_POST.equals(type)) {
             // POST方式请求
-            HttpPost httpPost = new HttpPost(url);
-            // 加入请求参数
-            if (params != null) {
-                List<BasicNameValuePair> paramList = new ArrayList<BasicNameValuePair>();
-                for (String key : params.keySet()) {
-                    if (key != null) {
-                        paramList.add(new BasicNameValuePair(key, params
-                                .get(key)));
-                    }
-                }
-                try {
-                    httpPost.setEntity(new UrlEncodedFormEntity(paramList, "UTF-8"));
-                } catch (UnsupportedEncodingException e) {
-                    e.printStackTrace();
-                }
-            }
-            page = sendRequstGetPage(httpPost);
+            page = sendPostRequest(url, params);
         }
         return page;
     }
 
-    public ResponseBean sendPostRequest(String url, Map<String, String> prams) {
-        HttpPost httppost = new HttpPost(url);
-        // All the parameters post to the web site
-        List<BasicNameValuePair> nvps = new ArrayList<BasicNameValuePair>();
-        for (String key : prams.keySet()) {
-            nvps.add(new BasicNameValuePair(key, prams.get(key)));
-        }
-        try {
-            httppost.setEntity(new UrlEncodedFormEntity(nvps, "UTF-8"));
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        }
-        return sendRequstGetPage(httppost);
-    }
-
     /**
-     * 大蚂蚁
-     * 使用代理的get请求
+     * 发送GET请求
      *
-     * @throws Exception
+     * @param url
+     * @param params
+     * @return
      */
-    public ResponseBean sendRequestDMY(String url, String cookie) {
-        // 搜索链接
-        HttpGet httpGet;
-        try {
-            httpGet = new HttpGet(url);
-        } catch (IllegalArgumentException e) {
-            logger.error(ExceptionUtils.getMessage(e));
-            return null;
+    public ResponseBean sendGetRequest(String url, Map<String, String> params) {
+        StringBuilder stringBuilder = new StringBuilder(url);
+        // 加入请求参数
+        if (params != null) {
+            if (url.indexOf("?") != -1) {
+                stringBuilder.append("&");
+            } else {
+                stringBuilder.append("?");
+            }
+            for (String key : params.keySet()) {
+                stringBuilder.append(key + "=" + params.get(key) + "&");
+            }
         }
-        RequestConfig.Builder requestConfigBuilder = HttpClientManager.getRequestConfig();
-        HttpHost proxy = new HttpHost("123.57.11.143", 8123, "http");
-        requestConfigBuilder.setProxy(proxy);
-        RequestConfig requestConfig = requestConfigBuilder.build();
-        httpGet.setConfig(requestConfig);
-        httpGet.setHeader("Proxy-Authorization", getAuthHeader());// authheader的生成方法参照网站的程序
-        //设置cookies
-        if (StringUtils.isNotBlank(cookie)) {
-            httpGet.setHeader("Cookie", cookie);
-        }
+        HttpGet httpGet = new HttpGet(stringBuilder.toString());
+        // 模拟浏览器
         return sendRequstGetPage(httpGet);
     }
 
-    public ResponseBean sendRequestAccount(String url, HttpHost proxy) {
-        // 搜索链接
-        HttpGet httpGet;
-        try {
-            httpGet = new HttpGet(url);
-        } catch (IllegalArgumentException e) {
-            logger.error(ExceptionUtils.getMessage(e));
-            return null;
-        }
-        BasicScheme proxyAuth = new BasicScheme();
-        // Make client believe the challenge came form a proxy
-        try {
-            proxyAuth.processChallenge(new BasicHeader(AUTH.PROXY_AUTH, "BASIC realm=default"));
-        } catch (MalformedChallengeException e) {
-            e.printStackTrace();
-        }
-        BasicAuthCache authCache = new BasicAuthCache();
-        authCache.put(proxy, proxyAuth);
-        CredentialsProvider credsProvider = new BasicCredentialsProvider();
-        credsProvider.setCredentials(
-                new AuthScope(proxy),
-                new UsernamePasswordCredentials("liuyq", "r51ex0kc"));
-        HttpClientContext context = HttpClientContext.create();
-        context.setAuthCache(authCache);
-        context.setCredentialsProvider(credsProvider);
-        return sendRequstGetPage(httpGet, context);
-    }
-
     /**
-     * 不好用，有问题
+     * 发送post请求
      *
-     * @param urlString
+     * @param url
+     * @param params
      * @return
      */
-    public static URI transformURI(String urlString) {
-        if (null == urlString || urlString.isEmpty()) {
-            return null;
+    public ResponseBean sendPostRequest(String url, Map<String, String> params) {
+        HttpPost httpPost = new HttpPost(url);
+        List<BasicNameValuePair> nvps = new ArrayList<>();
+        for (String key : params.keySet()) {
+            if (key != null) {
+                nvps.add(new BasicNameValuePair(key, params.get(key)));
+            }
         }
-        //防止传入的urlString首尾有空格
-        urlString = urlString.trim();
-        //转化String url为URI,解决url中包含特殊字符的情况
-        URI uri = null;
         try {
-            URL url = new URL(urlString);
-            //这里如果会强制将urlString转换为UTF-8格式，如百度贴吧的链接key为gb2312则不能使用此方法转换。
-            uri = new URI(url.getProtocol(), url.getHost(), url.getPath(), url.getQuery(), null);
-//            url=new URI()
-        } catch (MalformedURLException e) {
-            e.printStackTrace();
-        } catch (URISyntaxException e) {
+            httpPost.setEntity(new UrlEncodedFormEntity(nvps, "UTF-8"));
+        } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
         }
-        return uri;
+        return sendRequstGetPage(httpPost);
     }
 
-    private void setProxy(HttpClientContext context) {
-        HttpHost targetHost = new HttpHost("localhost", 80, "http");
-        CredentialsProvider credsProvider = new BasicCredentialsProvider();
-        credsProvider.setCredentials(
-                new AuthScope(targetHost.getHostName(), targetHost.getPort()),
-                new UsernamePasswordCredentials("username", "password"));
-        // Create AuthCache instance
-        AuthCache authCache = new BasicAuthCache();
-        // Generate BASIC scheme object and add it to the local auth cache
-        BasicScheme basicAuth = new BasicScheme();
-        authCache.put(targetHost, basicAuth);
-        // Add AuthCache to the execution context
-        context.setCredentialsProvider(credsProvider);
-        context.setAuthCache(authCache);
-    }
 
-    public void setRequestBuilderHeader(RequestBuilder requestBuilder) {
-        // 搜索头
-        String userAgent = HttpClientManagerParams.getRandomUsersAgent();
-//        String userAgent = "Mozilla/5.0";
-//        String userAgent = "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1; .NET CLR 1.1.4322; Alexa Toolbar; TencentTraveler 4.0)";
-        requestBuilder.addHeader("User-Agent", userAgent);
-        requestBuilder.setHeader("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8");
-        // httpGet.addHeader("Accept-Encoding", "gzip,deflate,sdch");//乱码
-        requestBuilder.setHeader("Accept-Language", "zh-CN,zh;q=0.8");
-        requestBuilder.setHeader("Cache-Control", "no-cache");
-        requestBuilder.setHeader("Pragma", "no-cache");
-//        httpRequestBase.setHeader("Connection", "Keep-Alive");
-        requestBuilder.setHeader("Connection", "close"); //会有传输中断异常TruncatedChunkException
-    }
-
+    /**
+     * Callable
+     */
     static class ExecuteRequsetTask implements Callable<CloseableHttpResponse> {
         CloseableHttpClient httpClient;
         HttpRequestBase request;
@@ -638,7 +489,7 @@ public class HttpHelper {
 
         @Override
         public CloseableHttpResponse call() throws Exception {
-//            System.out.println("子线程在进行计算");
+//            System.out.println("子线程在进行处理...");
             CloseableHttpResponse response = httpClient.execute(request, HttpClientContext.create());
             return response;
         }

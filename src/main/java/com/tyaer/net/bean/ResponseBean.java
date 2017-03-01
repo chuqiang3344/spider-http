@@ -14,10 +14,6 @@ public class ResponseBean {
      */
     private long ping;
     /**
-     * 页面原始文本
-     */
-    private String rawText;
-    /**
      * 请求返回码
      */
     private int statusCode;
@@ -25,6 +21,12 @@ public class ResponseBean {
      * 字符编码
      */
     private String charset;
+
+
+    /**
+     * 页面原始文本
+     */
+    private String rawText;
 
     public RequestBean getRequest() {
         return request;
@@ -86,9 +88,19 @@ public class ResponseBean {
                 "request=" + request +
                 ", url='" + url + '\'' +
                 ", ping=" + ping +
-                ", rawText='" + rawText + '\'' +
                 ", statusCode=" + statusCode +
                 ", charset='" + charset + '\'' +
+                ", rawText='" + rawText + '\'' +
                 '}';
+    }
+
+    public void out() {
+        System.err.println("================================");
+        System.out.println(this.getUrl());
+        String rawText = this.getRawText();
+        System.out.println(this.getStatusCode());
+        System.out.println("ping" + this.getPing());
+        System.out.println(rawText.getBytes().length);
+        System.out.println(rawText);
     }
 }

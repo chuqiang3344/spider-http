@@ -68,7 +68,7 @@ public class HttpClientManagerParams {
     }
 
     /**
-     * 根据指定最小值与最大值生成随机数，最小值为0。则最大值只有max-1
+     * 根据指定最小值与最大值生成随机数。最小值为0时，则最大值只有max-1
      *
      * @param min
      * @param max

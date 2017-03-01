@@ -34,8 +34,8 @@ import java.util.zip.GZIPInputStream;
  * Created by Twin on 2016/8/24.
  */
 public class HttpHandle {
-    private static final String[] CHARSETS = {"UTF-8", "GBK", "GB2312", "GB18030", "BIG5"};
-    protected static Logger logger = Logger.getLogger(HttpHandle.class);
+    private static final Logger logger = Logger.getLogger(HttpHandle.class);
+    private static String[] CHARSETS = {"UTF-8", "GBK", "GB2312", "GB18030", "BIG5"};
     private static String[] ERROR_ENCODING = new String[]{"NULL", "ZH-CN", "ISO-88591", "ISO-8859-1"};
 
     /**
@@ -143,11 +143,12 @@ public class HttpHandle {
         if (null != charset) {
             encoding = charset.toString();
         }
-        //第二步--->如果第一步contenttyp未获取到编码，这里从meta标签中获取
+        //第二步：如果第一步contenttyp未获取到编码，这里从meta标签中获取
         if (StringUtils.isBlank(encoding) || ArrayUtils.contains(ERROR_ENCODING, encoding.toUpperCase())) {
             encoding = getCharsetFromMetaTag(byteArrayBuffer);
         }
         if (StringUtils.isBlank(encoding)) {
+            //未获取到，则赋予默认值
             encoding = "GB2312";
         }
         return encoding.trim();
@@ -262,7 +263,6 @@ public class HttpHandle {
     }
 
     /**
-     *
      * @param buffer
      * @param url
      * @return
