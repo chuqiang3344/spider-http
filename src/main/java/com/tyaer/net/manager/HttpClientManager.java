@@ -64,7 +64,8 @@ public class HttpClientManager {
     /**
      * 下载失败后，将reqest重新加入队列，重新尝试下载的次数(添加到page的target request中，进入下一轮循环，也有可能被发送到MQ中)
      */
-//    private static final int cycleRetryTimes = 0;
+//    private static final int cycleRetryTimes
+// = 0;
 //    private static final int timeOut = 5000;
     /**
      * 获取连接的最大等待时间

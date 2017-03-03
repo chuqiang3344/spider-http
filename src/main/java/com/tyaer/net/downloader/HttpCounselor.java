@@ -1,4 +1,4 @@
-package com.tyaer.net.api;
+package com.tyaer.net.downloader;
 
 import com.tyaer.net.bean.ResponseBean;
 import com.tyaer.net.http.HttpHelper;
@@ -31,7 +31,7 @@ public class HttpCounselor {
         ResponseBean responseBean;
         if (useProxy) {
             if (Calendar.getInstance().getTimeInMillis() - useProxy_time > pause_time) {
-                logger.warn("###重新启用快速访问...");
+                logger.warn("###重新启用快速访问模式...");
                 useProxy = false;
                 useProxy_time = 0;
                 return getArticleHtml(url, cookie, queue);
@@ -42,7 +42,7 @@ public class HttpCounselor {
         } else {
             responseBean = HttpHelper.sendRequest(url, cookie);
             if (responseBean.getStatusCode() == 501) {
-                logger.warn("###启用切换代理访问...");
+                logger.warn("###启用切换代理访问模式...");
                 useProxy = true;
                 useProxy_time = Calendar.getInstance().getTimeInMillis();
                 return getArticleHtml(url, cookie, queue);

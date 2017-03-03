@@ -1,7 +1,5 @@
 package com.tyaer.net.http;
 
-//import com.google.common.base.Joiner;
-
 import com.tyaer.net.bean.RequestBean;
 import com.tyaer.net.bean.ResponseBean;
 import com.tyaer.net.manager.HttpClientManager;
@@ -28,10 +26,6 @@ import org.apache.log4j.Logger;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;

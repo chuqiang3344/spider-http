@@ -81,10 +81,4 @@ public class HttpClientManagerParams {
         return s;
     }
 
-    @Test
-    public void zxc(){
-        ResponseBean responseBean = HttpHelper.sendRequest("http://weixin.sogou.com/weixin?type=2&query=%E9%98%BF%E8%90%A8%E5%BE%B7&ie=utf8&_sug_=y&_sug_type_=&w=&sut=4780&sst0=1482373135364&lkt=5%2C1482373130391%2C1482373132365");
-        System.out.println(responseBean.getRawText());
-    }
-
 }
